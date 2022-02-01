@@ -8,7 +8,7 @@ class UserController {
 
         this.onSubmit();
         this.onEdit();
-
+        this.selectAll();
 
     }
 
@@ -101,6 +101,8 @@ class UserController {
                 (content) => {
 
                     values.photo = content;
+
+                    this.insert(values);
 
                     this.addLine(values);
 
@@ -206,6 +208,51 @@ class UserController {
 
     }
 
+    getUsersStorage() {
+
+        let users = []
+
+        /*if(sessionStorage.getItem("users")) {
+
+            users = JSON.parse(sessionStorage.getItem("users"));
+        }*/
+
+        if(localStorage.getItem("users")) {
+
+            users = JSON.parse(localStorage.getItem("users"));
+        }
+
+        return users;
+
+    }
+
+    selectAll() {
+
+        let users = this.getUsersStorage();
+
+        users.forEach(dataUser => {
+
+            let user = new User();
+
+            user.loadFromJSON(dataUser);
+
+            this.addLine(user);
+
+        })
+
+    }
+
+    insert(data) {
+
+        let users = this.getUsersStorage();
+
+        users.push(data);
+
+        //sessionStorage.setItem("users", JSON.stringify(users));
+        localStorage.setItem("users", JSON.stringify(users));
+
+    }
+
     addLine(dataUser) {
 
         let tr = document.createElement("tr");
@@ -220,7 +267,7 @@ class UserController {
                 <td>${Utils.dateFormat(dataUser.register)}</td>
                 <td>
                 <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-                <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+                <button type="button" class="btn btn-danger btn-delete btn-xs btn-flat">Excluir</button>
                 </td>
         `;
 
@@ -232,7 +279,41 @@ class UserController {
     
     }
 
+    getTr(dataUser, tr = null) {
+
+        if(tr === null) tr.dataset.user = JSON.stringify(dataUser);
+
+        tr.innerHTML = `
+                <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm"></td>
+                <td>${dataUser.name}</td>
+                <td>${dataUser.email}</td>
+                <td>${(dataUser.admin) ? 'Sim' : 'Não'}</td>
+                <td>${Utils.dateFormat(dataUser.register)}</td>
+                <td>
+                <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
+                <button type="button" class="btn btn-danger btn-delete btn-xs btn-flat">Excluir</button>
+                </td>
+        `;
+
+        this.addEventsTr(tr);
+
+        return tr;
+
+    }
+
     addEventsTr(tr) {
+
+        tr.querySelector(".btn-delete").addEventListener("click", e => {
+
+            if(confirm("Deseja realmente excluir?")) {
+
+                tr.remove();
+
+                this.updateCount();
+
+            }
+
+        });
 
         tr.querySelector(".btn-edit").addEventListener("click", e => {
 
